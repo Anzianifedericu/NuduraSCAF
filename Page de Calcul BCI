@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SCAF INNOVATION - Calculateur Nudura</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background-color: #f9f9f9;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-bottom: 20px;
+      background-color: #fff;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
+    h1, h2 {
+      color: #333;
+    }
+    button {
+      padding: 5px 10px;
+      margin: 5px;
+      cursor: pointer;
+    }
+    .result {
+      font-weight: bold;
+    }
+    .error {
+      color: red;
+      display: none;
+    }
+    @media print {
+      @page {
+        size: A4;
+        margin: 20mm;
+      }
+      body {
+        margin: 0;
+        padding: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>SCAF INNOVATION</h1>
+  <p>775 Avenue de Valrose, 20290 Borgo</p>
+  <p>Tel: 04 95 61 88 36</p>
+  <p>E-Mail: <a href="mailto:scafinnovation@gmail.com">scafinnovation@gmail.com</a></p>
+  <h2>Informations Projet</h2>
+  <table>
+    <tr>
+      <td>Date de la Demande <input type="date" id="dateCommande"></td>
+    </tr>
+    <tr>
+      <td>Nom Prénom <input type="text" id="nomPrenom"></td>
+    </tr>
+    <tr>
+      <td>N° Téléphone <input type="text" id="nomDevis"></td>
+    </tr>
+    <tr>
+      <td><label><input type="checkbox" id="particulier" onchange="toggleEnterpriseFields()"> Particuliers</label> <label><input type="checkbox" id="entreprise" onchange="toggleEnterpriseFields()"> Entreprise</label></td>
+    </tr>
+    <tr id="enterpriseFields" style="display:none;">
+      <td>Société <input type="text" id="nomEntreprise" placeholder="Nom de l'entreprise"> N° SIRET <input type="text" id="numRCS" placeholder="N° SIRET" oninput="validateSIRET()"> <span class="error" id="siretError">Numéro SIRET invalide.</span></td>
+    </tr>
+    <tr>
+      <td>Date d'Estimation début du Projet <input type="date" id="dateEstimation"></td>
+    </tr>
+    <tr>
+      <td>Adresse du projet <input type="text" id="adresse"></td>
+    </tr>
+    <tr>
+      <td>Code Postal <input type="text" id="codePostal"></td>
+    </tr>
+    <tr>
+      <td>Ville <input type="text" id="ville"></td>
+    </tr>
+    <tr>
+      <td>Prix Total : <span id="prix" class="result">0.00 €</span></td>
+    </tr>
+  </table>
+  <h2>Calculateur Quantitatif des Blocs Coffrage Isolant Nudura</h2>
+  <h2>Calculateur des Mètre linéaire</h2>
+  <div class="container">
+    <input type="number" id="value1" placeholder="Case 1"> 
+    <input type="number" id="value2" placeholder="Case 2"> 
+    <input type="number" id="value3" placeholder="Case 3"> 
+    <input type="number" id="value4" placeholder="Case 4"> 
+    <input type="number" id="value5" placeholder="Case 5"> 
+    <input type="number" id="value6" placeholder="Case 6"> 
+    <input type="number" id="value7" placeholder="Case 7"> 
+    <input type="number" id="value8" placeholder="Case 8"> 
+    <input type="number" id="value9" placeholder="Case 9"> 
+    <input type="number" id="value10" placeholder="Case 10"> 
+    <button onclick="calculate()">Calculer</button>
+    <div class="result" id="result">Total : 0</div>
+  </div>
+
+  <!-- Table pour les niveaux -->
+  <h3>Choix de Niveaux (Vs - RDC - R+1 - R+2 - R+3)</h3>
+  <table id="niveauTable">
+    <tr>
+      <th>Désignation (périmètre total)</th>
+      <th>Hauteur Standre BCI</th>
+      <th>Ml</th>
+      <th>H Mur</th>
+      <th>N de Rangée</th>
+      <th>Total M²</th>
+      <th>N de BCI</th>
+      <th>(M3)</th>
+      <th>N Suivant</th>
+    </tr>
+    <tr>
+      <td><input type="text" placeholder="vs - rdc"></td>
+      <td><input type="number" value="0.457" onchange="calculateTotal()" readonly></td>
+      <td><input type="number" value="0" onchange="calculateTotal()"></td>
+      <td><input type="number" value="0" onchange="calculateTotal();"></td>
+      <td class="rowCount">0</td>
+      <td class="totalM2">0.00</td>
+      <td class="unitCount">0</td>
+      <td class="volumeM3">0.00</td>
+      <td><button onclick="addLevel()">Ajouter Niveau</button></td>
+    </tr>
+  </table>
+
+  <!-- Total Général -->
+  <h3>Total Général M²</h3>
+  <p id="totalGeneralM2">Total M²: 0.00</p>
+  <p id="totalGeneralUnits">Total D'unités BCI: 0</p>
+
+  <!-- Angles Plancher -->
+  <h3>Angles Plancher</h3>
+  <table id="angleTable">
+    <tr>
+      <th>Désignation</th>
+      <th>H standard Angle</th>
+      <th>N D'angle</th>
+      <th>Hauteur Mur</th>
+      <th>Total Rangée</th>
+      <th>Total M²</th>
+      <th>Total Angle</th>
+      <th>Volume (m³)</th>
+      <th>Suivant</th>
+    </tr>
+    <tr>
+      <td><input type="text" placeholder="Nom du Niveau"></td>
+      <td><input type="number" value="0.457" onchange="calculateAngleTotal()" readonly></td>
+      <td><input type="number" value="0" onchange="calculateAngleTotal()"></td>
+      <td><input type="number" value="0" onchange="calculateAngleTotal();"></td>
+      <td class="angleRowCount">0</td>
+      <td class="totalAngleM2">0.00</td>
+      <td class="angleUnitCount">0</td>
+      <td class="angleVolume">0.00</td>
+      <td><button onclick="addAngle()">Ajouter Angle</button></td>
+    </tr>
+  </table>
+
+  <h3>Total Général Angles</h3>
+  <p id="totalGeneralAngleM2">Total Angles M²: 0.00</p>
+  <p id="totalUnitsAngle">Total Unité (s) D'Angle: 0</p>
+
+  <!-- Menuiserie -->
+  <h3>Ouvertures ou Menuiserie</h3>
+  <table id="menuiserieTable">
+    <tr>
+      <th>Désignation</th>
+      <th>Hauteur</th>
+      <th>Largeur</th>
+      <th>Qts Ouverture</th>
+      <th>Total M²</th>
+      <th>Total De Bouchon</th>
+      <th>Total Bouchon Linteau</th>
+      <th>Suivant</th>
+    </tr>
+    <tr>
+      <td><input type="text" placeholder="Désignation libre"></td>
+      <td><input type="number" value="0" onchange="calculateMenuiserieTotal()"></td>
+      <td><input type="number" value="0" onchange="calculateMenuiserieTotal()"></td>
+      <td><input type="number" value="0" onchange="calculateMenuiserieTotal();"></td>
+      <td class="totalMenuiserieM2">0.00</td>
+      <td class="bouchonCount">0</td>
+      <td class="linteauCount">0</td>
+      <td><button onclick="addMenuiserie()">Ajouter Ouverture</button></td>
+    </tr>
+  </table>
+
+  <h3>Total Général Menuiserie</h3>
+  <p id="totalMenuiserieM2">Total Menuiserie M²: 0.00</p>
+  <p id="totalUnitsBouchon">Total D'unités Bouchon: 0</p>
+  <p id="totalBouchonLinteau">Total Bouchon Linteau: 0</p>
+
+  <!-- Toit à Deux Pans -->
+  <h3>Toit à Deux Pans</h3>
+  <table id="toitTable">
+    <tr>
+      <th>Hauteur BCI</th>
+      <th>Longueur Pignon</th>
+      <th>Hauteur Pignon</th>
+      <th>Total M²</th>
+      <th>Total BCI</th>
+      <th>Volume (m³)</th>
+      <th>Suivant</th>
+    </tr>
+    <tr>
+      <td><input type="number" value="0.457" readonly></td>
+      <td><input type="number" value="0"></td>
+      <td><input type="number" value="0" onchange="calculateToitTotal();"></td>
+      <td class="totalToitM2">0.00</td>
+      <td class="toitUnitCount">0</td>
+      <td class="toitVolume">0.00</td>
+      <td><button onclick="addToit()">Ajouter Pan</button></td>
+    </tr>
+  </table>
+
+  <h3>Total Général Toit</h3>
+  <p id="totalToitM2">Total Toit M²: 0.00</p>
+  <p id="totalToitUnits">Total D'unités standard: 0</p>
+
+  <!-- Récapitulatif -->
+  <h3>Récapitulatif du Quantitatif</h3>
+  <p id="recapTotalM2">Total Général M² (Niveaux + Angles + Toit) : 0.00</p>
+  <p id="recapTotalOpeningM2">Total M² Ouvertures : 0.00</p>
+  <p id="recapNetTotalM2">Total M² Net : 0.00</p>
+  <p id="recapTotalStandard">Total M² Standard : 0.00</p>
+  <p id="recapTotalAngle">Total M² Angle : 0.00</p>
+
+  <!-- Liste Articles Construction -->
+  <h3>Liste Articles Construction</h3>
+  <select id="articleSelect" onchange="searchArticle()">
+    <option value="">Sélectionner un article</option>
+    <option value="NUS-I0096-06">NUS-I0096-06 - Bloc droit voile béton de 15 cm Isolation 6,7 cm de chaque coté</option>
+    <option value="NUS-I0090-06">NUS-I0090-06 - Angle 90° voile béton de 15 cm - Isolation 6,7 cm de chaque coté</option>
+    <option value="NUS-A0VJC-00">NUS-A0VJC-00 - Clips de Liaison de blocs (200/boite)</option>
+    <option value="NUS-A0ECF-04">NUS-A0ECF-04 - Bouchon pour voile béton de 10 cm - 57/Carton</option>
+    <option value="NUS-A0ECF-06">NUS-A0ECF-06 - Bouchon pour voile béton de 15 cm - 40/Carton</option>
+    <option value="NUS-I0B96-06">NUS-I0B96-06 - Module Brique pour voile béton de 15 cm - 1 côté standard/1 Corniche</option>
+    <option value="NUS-IWEBS-04">NUS-IWEBS-04 - Entretoise en 10 cm - 100/Carton</option>
+    <option value="NUS-IWEBS-06">NUS-IWEBS-06 - Entretoise en 15 cm - 100/Carton</option>
+    <option value="NUS-PLINT-04">NUS-PLINT-04 - Bouchons de linteau pour voile béton de 10cm - Longueur 121cm; Epaisseur 5cm</option>
+    <option value="NUS-PLINT-06">NUS-PLINT-06 - Bouchons de linteau pour voile béton de 15cm - Longueur 121cm; Epaisseur 5cm</option>
+    <option value="NUS-BSTRE-10">NUS-BSTRE-10 - Rack Métal avec Système alignement Tube carré EUROPE (Support Platelage + large); Montants 3.05m - Kit de 20</option>
+    <option value="NUS-ATSTP-00">NUS-ATSTP-00 - Support pour murs en T (30/Boite)</option>
+    <option value="NUS-ATAPE-01">NUS-ATAPE-01 - Scotch fibré; 36/carton</option>
+    <option value="NUS-ATPCL-04">NUS-ATPCL-04 - Scotch de Protection; 24/carton</option>
+    <option value="NUS-ABLOK-06">NUS-ABLOK-06 - Raidisseurs pour voile béton de 15 cm - paquet de 10</option>
+  </select>
+
+  <table id="articlesTable" style="display: none;">
+    <tr>
+      <th>Code</th>
+      <th>Description</th>
+      <th>Prix Public</th>
+      <th>Prix avec Remise</th>
+      <th>Quantité</th>
+      <th>Total</th>
+      <th>Actions</th>
+    </tr>
+    <tbody id="articlesBody"></tbody>
+  </table>
+
+  <button onclick="resetForm()">Remise à zéro</button>
+  <button onclick="window.print()">Imprimer la page</button>
+  <button onclick="savePDF()">Enregistrer en PDF</button> 
+
+  <script>
+    let articles = {
+      "NUS-I0096-06": { description: "Bloc droit voile béton de 15 cm Isolation 6,7 cm de chaque coté", prixPublic: 114.98 },
+      "NUS-I0090-06": { description: "Angle 90° voile béton de 15 cm - Isolation 6,7 cm de chaque coté", prixPublic: 56.61 },
+      "NUS-A0VJC-00": { description: "Clips de Liaison de blocs (200/boite)", prixPublic: 1.44 },
+      "NUS-A0ECF-04": { description: "Bouchon pour voile béton de 10 cm - 57/Carton", prixPublic: 6.73 },
+      "NUS-A0ECF-06": { description: "Bouchon pour voile béton de 15 cm - 40/Carton", prixPublic: 7.99 },
+      "NUS-I0B96-06": { description: "Module Brique pour voile béton de 15 cm - 1 côté standard/1 Corniche", prixPublic: 122.16 },
+      "NUS-IWEBS-04": { description: "Entretoise en 10 cm - 100/Carton", prixPublic: 1.05 },
+      "NUS-IWEBS-06": { description: "Entretoise en 15 cm - 100/Carton", prixPublic: 1.13 },
+      "NUS-PLINT-04": { description: "Bouchons de linteau pour voile béton de 10cm - Longueur 121cm; Epaisseur 5cm", prixPublic: 5.71 },
+      "NUS-PLINT-06": { description: "Bouchons de linteau pour voile béton de 15cm - Longueur 121cm; Epaisseur 5cm", prixPublic: 8.33 },
+      "NUS-BSTRE-10": { description: "Rack Métal avec Système alignement Tube carré EUROPE (Support Platelage + large); Montants 3.05m - Kit de 20", prixPublic: 12489.93 },
+      "NUS-ATSTP-00": { description: "Support pour murs en T (30/Boite)", prixPublic: 4.66 },
+      "NUS-ATAPE-01": { description: "Scotch fibré; 36/carton", prixPublic: 9.21 },
+      "NUS-ATPCL-04": { description: "Scotch de Protection; 24/carton", prixPublic: 7.64 },
+      "NUS-ABLOK-06": { description: "Raidisseurs pour voile béton de 15 cm - paquet de 10", prixPublic: 14.28 },
+    };
+
+    function searchArticle() {
+      const selectedValue = document.getElementById('articleSelect').value;
+      const siret = document.getElementById('numRCS').value;
+      const isValidSIRET = /^\d{14}$/.test(siret);
+      
+      if (selectedValue) {
+          const article = articles[selectedValue];
+          const prixPublic = article.prixPublic;
+          const prixAvecRemise = isValidSIRET ? prixPublic * 0.6 : prixPublic; // 40% de réduction si SIRET valide  
+          const newRow = `
+              <tr>
+                  <td>${selectedValue}</td>
+                  <td>${article.description}</td>
+                  <td>${prixPublic.toFixed(2)} €</td>
+                  <td>${prixAvecRemise.toFixed(2)} €</td>
+                  <td><input type="number" value="1" min="1" onchange="updateRowTotal(this)" /></td>
+                  <td class="total">0.00 €</td>
+                  <td><button onclick="removeArticle(this)">Supprimer</button></td>
+              </tr>
+          `;
+          document.getElementById('articlesBody').insertAdjacentHTML('beforeend', newRow);
+          document.getElementById('articlesTable').style.display = 'table';
+          updateRowTotal(document.querySelector('#articlesBody tr:last-child input')); // Met à jour le total de la dernière ligne  
+          updateTotal(); // Mise à jour du total général  
+      }
+    }
+
+    function updateRowTotal(input) {
+      const row = input.closest('tr');
+      const prixAvecRemise = parseFloat(row.cells[3].innerText.replace(' €', '')) || 0; // Prix avec remise  
+      const quantity = parseInt(input.value) || 0;
+      const rowTotal = prixAvecRemise * quantity;
+      row.querySelector('.total').innerText = rowTotal.toFixed(2) + " €";
+      updateTotal(); // Mise à jour du total général  
+    }
+
+    function updateTotal() {
+      const rows = document.querySelectorAll('#articlesBody tr');
+      let total = 0;
+      rows.forEach(row => {
+          const rowTotal = parseFloat(row.querySelector('.total').innerText.replace(' €', '')) || 0;
+          total += rowTotal;
+      });
+      document.getElementById('prix').innerText = total.toFixed(2) + " €"; // Affiche le total final  
+    }
+
+    function validateSIRET() {
+      const siret = document.getElementById('numRCS').value;
+      const isValid = /^\d{14}$/.test(siret);
+      document.getElementById('siretError').style.display = isValid ? 'none' : 'inline';
+      
+      // Met à jour le prix pour tous les articles en fonction de la validité du SIRET  
+      const rows = document.querySelectorAll('#articlesBody tr');
+      rows.forEach(row => {
+          const prixPublic = parseFloat(row.cells[2].innerText.replace(' €', ''));
+          const prixAvecRemise = isValid ? prixPublic * 0.6 : prixPublic; // 40% de réduction si SIRET valide  
+          row.cells[3].innerText = prixAvecRemise.toFixed(2) + " €";
+          updateRowTotal(row.querySelector('input')); // Met à jour le total de la ligne  
+      });
+      updateTotal(); // Met à jour le total général  
+    }
+
+    function toggleEnterpriseFields() {
+      const isParticulier = document.getElementById('particulier').checked;
+      const isEnterprise = document.getElementById('entreprise').checked;
+
+      document.getElementById('enterpriseFields').style.display = isEnterprise ? 'block' : 'none';
+      
+      // Réinitialiser les champs de l'entreprise si "Particulier" est sélectionné  
+      if (isParticulier) {
+          document.getElementById('nomEntreprise').value = '';
+          document.getElementById('numRCS').value = '';
+          document.getElementById('siretError').style.display = 'none';
+      }
+    }
+
+    function calculate() {
+      let total = 0;
+      for (let i = 1; i <= 10; i++) {
+          const value = parseFloat(document.getElementById(`value${i}`).value) || 0;
+          total += value;
+      }
+      document.getElementById('result').innerText = `Total : ${total}`;
+    }
+
+    function resetForm() {
+      document.getElementById('dateCommande').value = '';
+      document.getElementById('nomPrenom').value = '';
+      document.getElementById('nomDevis').value = '';
+      document.getElementById('particulier').checked = false;
+      document.getElementById('entreprise').checked = false;
+      toggleEnterpriseFields(); // Met à jour l'affichage des champs entreprise  
+      document.getElementById('articlesBody').innerHTML = ''; // Vide la liste des articles  
+      updateTotal(); // Remise à zéro du total  
+    }
+
+    function removeArticle(button) {
+      const row = button.closest('tr');
+      row.remove();
+      updateTotal(); // Met à jour le total général après suppression  
+    }
+
+    function calculateTotal() {
+      const hauteurBCI = parseFloat(document.querySelector('#niveauTable tr td:nth-child(2) input').value) || 0;
+      const longueur = parseFloat(document.querySelector('#niveauTable tr td:nth-child(3) input').value) || 0;
+      const hauteurMur = parseFloat(document.querySelector('#niveauTable tr td:nth-child(4) input').value) || 0;
+
+      const totalRangée = H mur / 0.457; //  Rand  
+      const totalM2 = longueur * hauteurBCI; // Longueur * Hauteur BCI  
+      const totalBCI = totalM2 * 1.12; // Exemple: 2 m² par BCI  
+      const volume = totalM2 * 0.15; // Exemple: Volume = M² * Hauteur BCI
+
+      document.querySelector('#niveauTable .rowCount').innerText = totalRangée.toFixed(2);
+      document.querySelector('#niveauTable .totalM2').innerText = totalM2.toFixed(2);
+      document.querySelector('#niveauTable .unitCount').innerText = totalBCI.toFixed(0);
+      document.querySelector('#niveauTable .volumeM3').innerText = volume.toFixed(2);
+
+      updateGeneralTotals();
+    }
+
+    function addLevel() {
+      const newRow = `
+        <tr>
+          <td><input type="text" placeholder="Niveau souhaité"></td>
+          <td><input type="number" value="0.457" onchange="calculateTotal()" readonly></td>
+          <td><input type="number" value="0" onchange="calculateTotal()"></td>
+          <td><input type="number" value="0" onchange="calculateTotal();"></td>
+          <td class="rowCount">0</td>
+          <td class="totalM2">0.00</td>
+          <td class="unitCount">0</td>
+          <td class="volumeM3">0.00</td>
+          <td><button onclick="removeLevel(this)">Supprimer</button></td>
+        </tr>
+      `;
+      document.getElementById('niveauTable').insertAdjacentHTML('beforeend', newRow);
+    }
+
+    function calculateAngleTotal() {
+      const hauteurAngle = parseFloat(document.querySelector('#angleTable tr td:nth-child(2) input').value) || 0;
+      const nombreAngle = parseFloat(document.querySelector('#angleTable tr td:nth-child(3) input').value) || 0;
+      const hauteurMur = parseFloat(document.querySelector('#angleTable tr td:nth-child(4) input').value) || 0;
+
+      const totalRangée = hauteurAngle * nombreAngle;
+      const totalM2 = totalRangée * hauteurMur;
+
+      document.querySelector('#angleTable .angleRowCount').innerText = totalRangée.toFixed(2);
+      document.querySelector('#angleTable .totalAngleM2').innerText = totalM2.toFixed(2);
+      updateGeneralTotals();
+    }
+
+    function addAngle() {
+      const newRow = `
+        <tr>
+          <td><input type="text" placeholder="Nom du Niveau"></td>
+          <td><input type="number" value="0.457" onchange="calculateAngleTotal()" readonly></td>
+          <td><input type="number" value="0" onchange="calculateAngleTotal()"></td>
+          <td><input type="number" value="0" onchange="calculateAngleTotal();"></td>
+          <td class="angleRowCount">0</td>
+          <td class="totalAngleM2">0.00</td>
+          <td class="angleUnitCount">0</td>
+          <td class="angleVolume">0.00</td>
+          <td><button onclick="removeAngle(this)">Supprimer</button></td>
+        </tr>
+      `;
+      document.getElementById('angleTable').insertAdjacentHTML('beforeend', newRow);
+    }
+
+    function calculateMenuiserieTotal() {
+      const hauteur = parseFloat(document.querySelector('#menuiserieTable tr td:nth-child(2) input').value) || 0;
+      const largeur = parseFloat(document.querySelector('#menuiserieTable tr td:nth-child(3) input').value) || 0;
+      const qtsOuverture = parseFloat(document.querySelector('#menuiserieTable tr td:nth-child(4) input').value) || 0;
+
+      const totalM2 = (hauteur * largeur) * qtsOuverture;
+
+      document.querySelector('#menuiserieTable .totalMenuiserieM2').innerText = totalM2.toFixed(2);
+      updateGeneralTotals();
+    }
+
+    function addMenuiserie() {
+      const newRow = `
+        <tr>
+          <td><input type="text" placeholder="Désignation libre"></td>
+          <td><input type="number" value="0" onchange="calculateMenuiserieTotal()"></td>
+          <td><input type="number" value="0" onchange="calculateMenuiserieTotal()"></td>
+          <td><input type="number" value="0" onchange="calculateMenuiserieTotal();"></td>
+          <td class="totalMenuiserieM2">0.00</td>
+          <td class="bouchonCount">0</td>
+          <td class="linteauCount">0</td>
+          <td><button onclick="removeMenuiserie(this)">Supprimer</button></td>
+        </tr>
+      `;
+      document.getElementById('menuiserieTable').insertAdjacentHTML('beforeend', newRow);
+    }
+
+    function calculateToitTotal() {
+      const hauteurBCI = parseFloat(document.querySelector('#toitTable tr td:nth-child(1)').innerText) || 0.457;
+      const longueurPignon = parseFloat(document.querySelector('#toitTable tr td:nth-child(2) input').value) || 0;
+      const hauteurPignon = parseFloat(document.querySelector('#toitTable tr td:nth-child(3) input').value) || 0;
+
+      const totalM2 = (hauteurBCI * (longueurPignon + hauteurPignon)) / 2;
+
+      document.querySelector('#toitTable .totalToitM2').innerText = totalM2.toFixed(2);
+      updateGeneralTotals();
+    }
+
+    function addToit() {
+      const newRow = `
+        <tr>
+          <td><input type="number" value="0.457" readonly></td>
+          <td><input type="number" value="0"></td>
+          <td><input type="number" value="0" onchange="calculateToitTotal();"></td>
+          <td class="totalToitM2">0.00</td>
+          <td class="toitUnitCount">0</td>
+          <td class="toitVolume">0.00</td>
+          <td><button onclick="removeToit(this)">Supprimer</button></td>
+        </tr>
+      `;
+      document.getElementById('toitTable').insertAdjacentHTML('beforeend', newRow);
+    }
+
+    function updateGeneralTotals() {
+      const rowsNiveaux = document.querySelectorAll('#niveauTable tr:not(:first-child)');
+      const rowsAngles = document.querySelectorAll('#angleTable tr:not(:first-child)');
+      const rowsMenuiserie = document.querySelectorAll('#menuiserieTable tr:not(:first-child)');
+      const rowsToit = document.querySelectorAll('#toitTable tr:not(:first-child)');
+
+      let totalGeneralM2 = 0;
+      let totalUnitsBCI = 0;
+      let totalGeneralAngle = 0;
+      let totalGeneralMenuiserie = 0;
+      let totalGeneralToit = 0;
+
+      rowsNiveaux.forEach(row => {
+        const totalM2 = parseFloat(row.querySelector('.totalM2').innerText) || 0;
+        const unitCount = parseFloat(row.querySelector('.unitCount').innerText) || 0;
+        totalGeneralM2 += totalM2;
+        totalUnitsBCI += unitCount;
+      });
+
+      rowsAngles.forEach(row => {
+        const totalM2 = parseFloat(row.querySelector('.totalAngleM2').innerText) || 0;
+        totalGeneralAngle += totalM2;
+      });
+
+      rowsMenuiserie.forEach(row => {
+        const totalM2 = parseFloat(row.querySelector('.totalMenuiserieM2').innerText) || 0;
+        totalGeneralMenuiserie += totalM2;
+      });
+
+      rowsToit.forEach(row => {
+        const totalM2 = parseFloat(row.querySelector('.totalToitM2').innerText) || 0;
+        totalGeneralToit += totalM2;
+      });
+
+      document.getElementById('totalGeneralM2').innerText = `Total M²: ${totalGeneralM2.toFixed(2)}`;
+      document.getElementById('totalGeneralUnits').innerText = `Total D'unités BCI: ${totalUnitsBCI}`;
+      document.getElementById('totalGeneralAngleM2').innerText = `Total Angles M²: ${totalGeneralAngle.toFixed(2)}`;
+      document.getElementById('totalMenuiserieM2').innerText = `Total Menuiserie M²: ${totalGeneralMenuiserie.toFixed(2)}`;
+      document.getElementById('totalToitM2').innerText = `Total Toit M²: ${totalGeneralToit.toFixed(2)}`;
+      document.getElementById('recapTotalM2').innerText = `Total Général M² (Niveaux + Angles + Toit) : ${(totalGeneralM2 + totalGeneralAngle + totalGeneralToit).toFixed(2)}`;
+      document.getElementById('recapTotalOpeningM2').innerText = `Total M² Ouvertures : ${totalGeneralMenuiserie.toFixed(2)}`;
+      document.getElementById('recapNetTotalM2').innerText = `Total M² Net : ${(totalGeneralM2 + totalGeneralAngle + totalGeneralToit - totalGeneralMenuiserie).toFixed(2)}`;
+    }
+
+    function removeToit(button) {
+      const row = button.closest('tr');
+      row.remove();
+      calculateToitTotal();
+    }
+
+    function removeAngle(button) {
+      const row = button.closest('tr');
+      row.remove();
+      calculateAngleTotal();
+    }
+
+    function removeMenuiserie(button) {
+      const row = button.closest('tr');
+      row.remove();
+      calculateMenuiserieTotal();
+    }
+
+    function savePDF() {
+      // Fonctionnalité pour sauvegarder en PDF à implémenter ici  
+      alert('Fonctionnalité à implémenter pour enregistrer en PDF.');
+    }
+  </script>
+</body>
+</html>
